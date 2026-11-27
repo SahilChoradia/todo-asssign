@@ -3,9 +3,15 @@ import { Pool } from "pg";
 const connectionString =
   process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/todo_db";
 
+const isRemoteDb =
+  connectionString.includes("supabase.co") ||
+  connectionString.includes("pooler.supabase.com") ||
+  connectionString.includes("sslmode=require") ||
+  process.env.NODE_ENV === "production";
+
 export const dbPool = new Pool({
   connectionString,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  ssl: isRemoteDb ? { rejectUnauthorized: false } : false,
 });
 
 export async function initDb(): Promise<void> {
