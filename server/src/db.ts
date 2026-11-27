@@ -1,17 +1,26 @@
 import { Pool } from "pg";
 
-const connectionString =
+const rawConnectionString =
   process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/todo_db";
 
+// Remove ?sslmode=... from connection string so pg doesn't override the ssl object
+const cleanConnectionString = rawConnectionString
+  .replace(/[?&]sslmode=[^&]+/g, "")
+  .replace(/\?$/, "");
+
 const isRemoteDb =
-  connectionString.includes("supabase.co") ||
-  connectionString.includes("pooler.supabase.com") ||
-  connectionString.includes("sslmode=require") ||
+  rawConnectionString.includes("supabase.co") ||
+  rawConnectionString.includes("pooler.supabase.com") ||
+  rawConnectionString.includes("sslmode=") ||
   process.env.NODE_ENV === "production";
 
 export const dbPool = new Pool({
-  connectionString,
-  ssl: isRemoteDb ? { rejectUnauthorized: false } : false,
+  connectionString: cleanConnectionString,
+  ssl: isRemoteDb
+    ? {
+        rejectUnauthorized: false,
+      }
+    : false,
 });
 
 export async function initDb(): Promise<void> {
